@@ -175,7 +175,7 @@ http://localhost:8000/api
 - **Database Layer**: MySQL for user/chatbot/conversation data, Qdrant for vector storage
 - **AI Integration**: Google Gemini AI for Q&A, Sentence Transformers for embeddings, LangChain for conversation memory
 - **File Processing**: PDF, SVG, TXT, DOC, DOCX support, text extraction, chunking, vector embedding, ingestion
-- **Web Scraping**: Automated crawling, content extraction, incremental storage, real-time progress, cancellation
+- **Web Scraping**: Scrapy-based async crawler (same-domain, concurrent requests), content extraction with Scrapy selectors, chunking, SentenceTransformer embeddings, incremental Qdrant ingestion, real-time progress, cancellation, and optional robots.txt override
 
 ## 🚀 Usage Examples
 
@@ -231,16 +231,18 @@ curl -X POST "http://localhost:8000/api/questions/ask-question" \
   }'
 ```
 
-### 6. Start Web Scraping
+### 6. Start Web Scraping (Scrapy-based crawler)
 ```bash
 curl -X POST "http://localhost:8000/api/scraping/scrape-and-ingest" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "url": "https://example.com",
-    "collection_name": "scraped_content"
+    "collection_name": "scraped_content",
+    "obey_robots": true
   }'
 ```
+Returns `task_id` immediately; poll progress at `GET /api/scraping/scraping-progress/{task_id}`.
 
 ### 7. Get Scraping Progress
 ```bash
@@ -270,9 +272,10 @@ Interactive API documentation is available at:
 
 ### Running Tests
 ```bash
-# Add test commands when implemented
-pytest
+# Unit tests for Scrapy spider and Qdrant pipeline (mocks Qdrant; no live server needed)
+pytest tests/ -v
 ```
+See `IMPLEMENTATION_PLAN_SCRAPY.md` for the Scrapy integration design and `scripts/run_crawl_example.py` for a minimal crawl-from-Python example.
 
 ### Code Formatting
 ```bash

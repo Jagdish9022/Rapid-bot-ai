@@ -2,69 +2,42 @@ import psycopg2
 from psycopg2 import sql, Error
 import os
 from dotenv import load_dotenv
-from app.utils.logger import setup_logger 
+from app.utils.logger import setup_logger
 
-# Load environment variables
 load_dotenv()
-
-# Use your custom logger
 logger = setup_logger("postgres")
 
-def get_db_connection(use_database=True):
+def get_db_connection():
     try:
         connection_params = {
-            'host': os.getenv("POSTGRES_DB_HOST", "localhost"),
-            'user': os.getenv("POSTGRES_DB_USER", "postgres"),
-            'password': os.getenv("POSTGRES_DB_PASSWORD", "postgresql"),
-            'port': os.getenv("POSTGRES_DB_PORT", 5432),
+            "host": os.environ["POSTGRES_DB_HOST"],
+            "user": os.environ["POSTGRES_DB_USER"],
+            "password": os.environ["POSTGRES_DB_PASSWORD"],
+            "dbname": os.environ["POSTGRES_DB_NAME"],
+            "port": int(os.environ.get("POSTGRES_DB_PORT", 5432)),
+            "sslmode": "require",   # MANDATORY FOR NEON
         }
 
-        if use_database:
-            connection_params['dbname'] = os.getenv("POSTGRES_DB_NAME", "webchat_db")
-
-        logger.info(f"Attempting to connect to PostgreSQL {'database' if use_database else 'server'}...")
+        logger.info("Connecting to PostgreSQL (Neon)...")
         connection = psycopg2.connect(**connection_params)
-        logger.info("Successfully connected to PostgreSQL")
+        logger.info("PostgreSQL connection successful")
         return connection
 
+    except KeyError as e:
+        raise RuntimeError(f"Missing environment variable: {e}")
+
     except Error as e:
-        logger.error(f"Failed to connect to PostgreSQL: {e}")
+        logger.error(f"PostgreSQL connection failed: {e}")
         raise e
 
-def create_database():
-    """Create database if it doesn't exist"""
-    connection = None
-    cursor = None
-    try:
-        logger.info("Starting PostgreSQL database creation process...")
-        connection = get_db_connection(use_database=False)
-        connection.autocommit = True
-        cursor = connection.cursor()
-
-        db_name = os.getenv("POSTGRES_DB_NAME", "webchat_db")
-        cursor.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(db_name)))
-        logger.info(f"Database '{db_name}' created (if it didn't exist).")
-
-    except Error as e:
-        if "already exists" in str(e):
-            logger.info("Database already exists, skipping creation.")
-        else:
-            logger.error(f"Failed to create PostgreSQL database: {e}")
-            raise e
-    finally:
-        if cursor:
-            cursor.close()
-        if connection:
-            connection.close()
-            logger.info("PostgreSQL server connection closed.")
 
 def init_db():
-    """Initialize PostgreSQL database with required tables."""
     connection = get_db_connection()
     cursor = connection.cursor()
 
     try:
-        logger.info("Initializing PostgreSQL tables...")
+        logger.info("Initializing tables...")
+
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY,
@@ -92,18 +65,17 @@ def init_db():
         """)
 
         connection.commit()
-        logger.info("PostgreSQL tables initialized successfully")
+        logger.info("Tables initialized successfully")
 
     except Error as e:
-        logger.error(f"Error initializing PostgreSQL tables: {e}")
+        logger.error(f"Schema init failed: {e}")
         raise e
     finally:
         cursor.close()
         connection.close()
-        logger.info("PostgreSQL connection closed")
+
 
 def get_db():
-    """Yield PostgreSQL connection."""
     connection = get_db_connection()
     try:
         yield connection

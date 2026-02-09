@@ -38,7 +38,7 @@ def translate_to_english(user_query: str) -> str:
         str: The clean, translated English text. Returns an empty string if
              translation fails or no text is returned by the model.
     """
-    model = genai.GenerativeModel("gemini-2.0-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash-lite-preview-09-2025")
 
     # Refined prompt: Explicitly instruct the model to return only the translation.
     prompt = (
@@ -80,7 +80,7 @@ def ask_gemini_fast(
     """Ask Gemini with simple conversation history (ultra-fast)."""
     
     try:
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash-lite-preview-09-2025")
 
         # Build conversation context quickly
         conversation_context = ""
@@ -204,7 +204,7 @@ def ask_gemini_fast(
 
 def analyze_user_query(question: str) -> dict:
     """Analyze user query to extract key information and intent."""
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash-lite-preview-09-2025")
     prompt = (
         "Analyze this user question and extract key information:\n"
         "1. Main topic/subject\n"
@@ -239,7 +239,7 @@ def process_query_with_gemini(user_query: str) -> Dict[str, Any]:
     Translates query if needed.
     """
     try:
-        model = genai.GenerativeModel('gemini-2.0-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite-preview-09-2025')
         
         prompt = f"""
         You are a multilingual assistant. The user query might be in any language.
