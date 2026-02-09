@@ -56,8 +56,11 @@ async def scrape_and_ingest(
                 "user_id": current_user['id']  # Track which user started this task
             }
         
-        # Submit task to thread pool executor
-        future = scraping_executor.submit(process_scraping_sync, req.url, task_id, collection_name)
+        # Submit task to thread pool executor (Scrapy-based crawler)
+        obey_robots = getattr(req, "obey_robots", True)
+        future = scraping_executor.submit(
+            process_scraping_sync, req.url, task_id, collection_name, obey_robots
+        )
         
         # Don't wait for the result, just return the task_id immediately
         logger.info(f"Scraping task {task_id} submitted to thread pool")

@@ -44,6 +44,11 @@ def update_progress(task_id: str, status: str, **kwargs):
         if "result" in kwargs:
             scraping_progress[task_id]["result"] = kwargs["result"]
 
+
+
+
+
+
 def request_cancellation(task_id: str):
     """Request cancellation for a specific task."""
     with cancellation_lock:
@@ -92,14 +97,12 @@ def get_qdrant_client() -> QdrantClient:
             
         else:
             # Local Qdrant configuration
-            host = os.getenv("LOCAL_QDRANT_HOST", "localhost")
+            host = os.getenv("LOCAL_QDRANT_HOST", "f3a2-2409-40c2-8430-7f71-7167-e34d-a649-5064.ngrok-free.app")
             port = int(os.getenv("LOCAL_QDRANT_PORT", "6333"))
             
             client = QdrantClient(
-                host=host,
-                port=port,
-                timeout=60,
-                prefer_grpc=False  # Use HTTP instead of gRPC for better compatibility
+                url="https://f3a2-2409-40c2-8430-7f71-7167-e34d-a649-5064.ngrok-free.app",
+                timeout=60,  # Use HTTP instead of gRPC for better compatibility
             )
             logger.info(f"Connecting to local Qdrant at {host}:{port}")
         
